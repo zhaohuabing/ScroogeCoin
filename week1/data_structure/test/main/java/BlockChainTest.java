@@ -21,32 +21,36 @@ public class BlockChainTest extends TestCase {
 		assertEquals(blockChain.getBlockAt(5).getData(), "block5");
 		assertNull(blockChain.getBlockAt(6));
 	}
-	
-	public void testHashPointer()
-	{
-		Block block1=blockChain.getBlockAt(1);
-		Block block2=blockChain.getBlockAt(2);
+
+	public void testHashPointer() {
+		Block block1 = blockChain.getBlockAt(1);
+		Block block2 = blockChain.getBlockAt(2);
 		assertEquals(block1.hashCode(), block2.getPre().hash);
-		
-		Block block5=blockChain.getBlockAt(5);
-		assertTrue(blockChain.getHead().hash!=block5.hashCode());
+
+		Block block5 = blockChain.getBlockAt(5);
+		assertTrue(blockChain.getHead().hash == block5.hashCode());
 	}
-	
-	public void testTamperData()
-	{
-		//Tamper with block3
-		Block block3=blockChain.getBlockAt(3);
+
+	public void testTamperData() {
+		// Tamper with block3
+		Block block3 = blockChain.getBlockAt(3);
 		block3.setData("block3 has been modified by bad guy!");
-		
-		//To make the story consistent, continue to modify block4 and bock5
+
+		// To make the story consistent, continue to modify block4 and bock5
 		Block block4 = blockChain.getBlockAt(4);
 		block4.getPre().hash = block3.hashCode();
-		
+
 		Block block5 = blockChain.getBlockAt(5);
 		block5.getPre().hash = block4.hashCode();
+
+		block3 = blockChain.getBlockAt(3);
+		block4 = blockChain.getBlockAt(4);
+		assertEquals(block3.hashCode(), block4.getPre().hash);
+		assertEquals(block4.hashCode(), block5.getPre().hash);
 		
-		assertTrue(blockChain.getHead().hash!=block5.hashCode());
-		
+		//We assume that head is remembered by the user of the blockchain, so it can't
+		//be tampered with. The head is used to verify the data in the chain.
+		assertTrue(blockChain.getHead().hash != block5.hashCode());
 	}
 
 }
