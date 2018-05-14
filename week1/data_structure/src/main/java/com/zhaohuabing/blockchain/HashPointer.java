@@ -12,6 +12,6 @@
 package com.zhaohuabing.blockchain;
 
 public class HashPointer {
-    Block block;
-    String hash;
+    Block ref; // reference 2 the block
+    String hash; // Hash digest of the block
 }

@@ -26,46 +26,51 @@ public class BlockChain {
     public BlockChain() {
         Block genesisBlock = new Block(null, 0, new String("The very first block!"));
         head = new HashPointer();
-        head.block = genesisBlock;
+        head.ref = genesisBlock;
         head.hash = genesisBlock.getHash();
     }
 
     public void addBlock(String data) {
         HashPointer pointer = new HashPointer();
-        pointer.block = head.block;
+        pointer.ref = head.ref;
         pointer.hash = head.hash;
 
-        Block block = new Block(pointer, head.block.getPos() + 1, data);
-        head.block = block;
+        Block block = new Block(pointer, head.ref.getPos() + 1, data);
+        head.ref = block;
         head.hash = block.getHash();
     }
 
     public Block getBlockAt(int pos) {
         HashPointer pointer = head;
         while (pointer != null) {
-            int currentPos = pointer.block.getPos();
+            int currentPos = pointer.ref.getPos();
             if (currentPos == pos) {
-                return pointer.block;
+                return pointer.ref;
             }
             if (currentPos < pos) {
                 return null;
             }
-            pointer = pointer.block.getPre();
+            pointer = pointer.ref.getPre();
         }
         return null;
     }
 
     public void traverse() {
-        Block current = head.block;
+        Block current = head.ref;
         System.out.print("Head:");
         System.out.print(" Hash:" + current.getHash());
         System.out.println(" Data:" + current.getData());
 
         HashPointer pointer = current.getPre();
         while (pointer != null) {
-            System.out.print("Hash:" + pointer.block.getHash());
-            System.out.println(" Data:" + pointer.block.getData());
-            pointer = pointer.block.getPre();
+            System.out.println("");
+            System.out.println("Current Block: ");
+            System.out.println(current);
+            System.out.println("Previous Block: ");
+            System.out.print("Hash:" + pointer.ref.getHash());
+            System.out.println(" Data:" + pointer.ref.getData());
+            current = pointer.ref;
+            pointer = pointer.ref.getPre();
         }
     }
 

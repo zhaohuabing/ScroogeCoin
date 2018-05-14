@@ -15,7 +15,8 @@ import com.zhaohuabing.Tools;
 
 public class Block {
     private HashPointer pre;
-    private String data;// Literally, data can be anything, I'm using string for simplicity
+    private String data;// Literally, data can be anything, I'm using string here just for
+                        // simplicity
     private int pos; // Serial number of the block
 
     public Block(HashPointer pre, int pos, String data) {
@@ -51,12 +52,16 @@ public class Block {
 
     @Override
     public String toString() {
-        return new StringBuffer("Hash: ").append(this.hashCode()).append(" Data:").append(this.data).toString();
+        return new StringBuffer("Hash: ").append(this.getHash()).append(" Data:").append(this.data).toString();
     }
 
     public String getHash() {
-        String content = new StringBuffer(pre.hash).append(data).toString();
-
+        String content;
+        if (pre != null) {
+            content = new StringBuffer(pre.hash).append(data).toString();
+        } else {
+            content = data;
+        }
         return Tools.getSHA2HexValue(content);
     }
 }
