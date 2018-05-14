@@ -1,6 +1,4 @@
 /**
- * Copyright 2017 ZTE Corporation.
- *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  *
@@ -27,11 +25,11 @@ public class Tools {
      * @param str
      * @return
      */
-    public static String getSHA2HexValue(byte[] data) {
+    public static String getSHA2HexValue(String data) {
         byte[] cipher_byte;
         try {
             MessageDigest md = MessageDigest.getInstance("SHA-256");
-            md.update(data);
+            md.update(data.getBytes());
             cipher_byte = md.digest();
             StringBuilder sb = new StringBuilder(2 * cipher_byte.length);
             for (byte b : cipher_byte) {
