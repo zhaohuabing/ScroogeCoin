@@ -7,3 +7,7 @@ This amazing course is created by the professors of Princeton University. It's f
 
 Course url: https://www.coursera.org/learn/cryptocurrency
 
+Blog: https://zhaohuabing.com/category/note/
+
+## LICENSE
+[Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)
