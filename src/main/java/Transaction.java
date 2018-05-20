@@ -5,6 +5,9 @@ import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+
 public class Transaction {
 
 	public class Input {
@@ -204,5 +207,18 @@ public class Transaction {
 
 	public int numOutputs() {
 		return outputs.size();
+	}
+
+	@Override
+	public int hashCode() {
+		return new HashCodeBuilder().append(this.hash).build();
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (obj instanceof Transaction) {
+			return new EqualsBuilder().append(this.hash, ((Transaction) obj).hash).build();
+		}
+		return false;
 	}
 }

@@ -1,10 +1,12 @@
 import java.security.PublicKey;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class TxHandler {
+public class MaxFeeTxHandler {
 	private UTXOPool utxoPool;
 
 	/**
@@ -12,7 +14,7 @@ public class TxHandler {
 	 * transaction outputs) is {@code utxoPool}. This should make a copy of utxoPool
 	 * by using the UTXOPool(UTXOPool uPool) constructor.
 	 */
-	public TxHandler(UTXOPool utxoPool) {
+	public MaxFeeTxHandler(UTXOPool utxoPool) {
 		this.utxoPool = new UTXOPool(utxoPool);
 	}
 
@@ -93,14 +95,29 @@ public class TxHandler {
 	 * Handles each epoch by receiving an unordered array of proposed transactions,
 	 * checking each transaction for correctness, returning a mutually valid array
 	 * of accepted transactions, and updating the current UTXO pool as appropriate.
+	 * 
+	 * Sort the accepted transactions by fee
 	 */
 	public Transaction[] handleTxs(Transaction[] possibleTxs) {
+		Arrays.sort(possibleTxs, new Comparator<Transaction>() {
+			@Override
+			public int compare(Transaction lhs, Transaction rhs) {
+				double diff = calcTxFee(lhs) - calcTxFee(rhs);
+				if (diff > 0) {
+					return 1;
+				} else if (diff < 0) {
+					return -1;
+				} else {
+					return 0;
+				}
+			}
+		});
+
 		List<Transaction> acceptedTx = new ArrayList<Transaction>();
-		for (int i = 0; i < possibleTxs.length; i++) {
+		for (int i = possibleTxs.length - 1; i >= 0; i--) {
 			Transaction tx = possibleTxs[i];
 			if (isValidTx(tx)) {
 				acceptedTx.add(tx);
-
 				removeConsumedCoinsFromPool(tx);
 				addCreatedCoinsToPool(tx);
 			}
@@ -109,6 +126,35 @@ public class TxHandler {
 		Transaction[] result = new Transaction[acceptedTx.size()];
 		acceptedTx.toArray(result);
 		return result;
+	}
+
+	private double calcTxFee(Transaction tx) {
+		double inputSum = calculateInputSum(tx);
+		double outputSum = calculateOutputSum(tx);
+
+		return inputSum - outputSum;
+	}
+
+	private double calculateOutputSum(Transaction tx) {
+		double outputSum = 0;
+		List<Transaction.Output> outputs = tx.getOutputs();
+		for (int j = 0; j < outputs.size(); j++) {
+			Transaction.Output output = outputs.get(j);
+			outputSum += output.value;
+		}
+		return outputSum;
+	}
+
+	private double calculateInputSum(Transaction tx) {
+		List<Transaction.Input> inputs = tx.getInputs();
+		double inputSum = 0;
+		for (int j = 0; j < inputs.size(); j++) {
+			Transaction.Input input = inputs.get(j);
+			UTXO utxo = new UTXO(input.prevTxHash, input.outputIndex);
+			Transaction.Output correspondingOutput = utxoPool.getTxOutput(utxo);
+			inputSum += correspondingOutput.value;
+		}
+		return inputSum;
 	}
 
 	private void addCreatedCoinsToPool(Transaction tx) {
