@@ -104,6 +104,37 @@ public class TxHandlerTest extends TestCase {
 		assertEquals(acceptedRx.length, 1);
 	}
 
+	public void testMultipTxDepenonEachother()
+			throws InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException, SignatureException {
+		// Scrooge transfer 10 coins to Alice
+		Transaction tx1 = new Transaction();
+		tx1.addInput(genesiseTx.getHash(), 0);
+		tx1.addOutput(10, aliceKeypair.getPublic());
+		byte[] sig1 = signMessage(scroogeKeypair.getPrivate(), tx1.getRawDataToSign(0));
+		tx1.addSignature(sig1, 0);
+		tx1.finalize();
+
+		// Alice transfer 4 to bob, 6 to mike
+		Transaction tx2 = new Transaction();
+		tx2.addInput(tx1.getHash(), 0);
+		tx2.addOutput(4, bobKeypair.getPublic());
+		tx2.addOutput(6, mikeKeypair.getPublic());
+		byte[] sig2 = signMessage(aliceKeypair.getPrivate(), tx2.getRawDataToSign(0));
+		tx2.addSignature(sig2, 0);
+		tx2.finalize();
+
+		// Bob transfer 4 to mike
+		Transaction tx3 = new Transaction();
+		tx3.addInput(tx2.getHash(), 0);
+		tx3.addOutput(4, mikeKeypair.getPublic());
+		byte[] sig3 = signMessage(bobKeypair.getPrivate(), tx3.getRawDataToSign(0));
+		tx3.addSignature(sig3, 0);
+		tx3.finalize();
+
+		Transaction[] acceptedRx = txHandler.handleTxs(new Transaction[] { tx1, tx2, tx3 });
+		assertEquals(acceptedRx.length, 3);
+	}
+
 	public void testDoubleSpending()
 			throws InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException, SignatureException {
 		// Scrooge transfer 10 coins to Alice

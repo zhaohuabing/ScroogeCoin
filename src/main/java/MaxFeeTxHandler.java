@@ -1,7 +1,6 @@
 import java.security.PublicKey;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -99,33 +98,45 @@ public class MaxFeeTxHandler {
 	 * Sort the accepted transactions by fee
 	 */
 	public Transaction[] handleTxs(Transaction[] possibleTxs) {
-		Arrays.sort(possibleTxs, new Comparator<Transaction>() {
-			@Override
-			public int compare(Transaction lhs, Transaction rhs) {
-				double diff = calcTxFee(lhs) - calcTxFee(rhs);
-				if (diff > 0) {
-					return 1;
-				} else if (diff < 0) {
-					return -1;
-				} else {
-					return 0;
-				}
-			}
-		});
-
-		List<Transaction> acceptedTx = new ArrayList<Transaction>();
-		for (int i = possibleTxs.length - 1; i >= 0; i--) {
-			Transaction tx = possibleTxs[i];
+		List<TransactionWithFee> acceptedTx = new ArrayList<TransactionWithFee>();
+		for (Transaction tx : possibleTxs) {
 			if (isValidTx(tx)) {
-				acceptedTx.add(tx);
+				TransactionWithFee txWithFee = new TransactionWithFee(tx);
+				acceptedTx.add(txWithFee);
 				removeConsumedCoinsFromPool(tx);
 				addCreatedCoinsToPool(tx);
 			}
 		}
 
+		Collections.sort(acceptedTx);
 		Transaction[] result = new Transaction[acceptedTx.size()];
-		acceptedTx.toArray(result);
+		for (int i = 0; i < acceptedTx.size(); i++) {
+			result[i] = acceptedTx.get(acceptedTx.size() - i - 1).tx;
+		}
+
 		return result;
+	}
+
+	class TransactionWithFee implements Comparable<TransactionWithFee> {
+		public Transaction tx;
+		private double fee;
+
+		public TransactionWithFee(Transaction tx) {
+			this.tx = tx;
+			this.fee = calcTxFee(tx);
+		}
+
+		@Override
+		public int compareTo(TransactionWithFee otherTx) {
+			double diff = fee - otherTx.fee;
+			if (diff > 0) {
+				return 1;
+			} else if (diff < 0) {
+				return -1;
+			} else {
+				return 0;
+			}
+		}
 	}
 
 	private double calcTxFee(Transaction tx) {

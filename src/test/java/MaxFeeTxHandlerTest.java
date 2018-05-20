@@ -7,6 +7,7 @@ import java.security.PrivateKey;
 import java.security.SecureRandom;
 import java.security.Signature;
 import java.security.SignatureException;
+import java.util.Arrays;
 
 import junit.framework.TestCase;
 
@@ -86,31 +87,26 @@ public class MaxFeeTxHandlerTest extends TestCase {
 		byte[] sig1 = signMessage(scroogeKeypair.getPrivate(), tx1.getRawDataToSign(0));
 		tx1.addSignature(sig1, 0);
 		tx1.finalize();
-		assertTrue(txHandler.isValidTx(tx1));
-		Transaction[] acceptedRx = txHandler.handleTxs(new Transaction[] { tx1 });
-		assertEquals(acceptedRx.length, 1);
 
-		// Alice transfer 3.5 to mike, transaction fee is 4-3.5=0.5
+		// Alice transfer 3.4 to mike, transaction fee is 4-3.4=0.6
 		Transaction tx2 = new Transaction();
 		tx2.addInput(tx1.getHash(), 0);
-		tx2.addOutput(3.5, mikeKeypair.getPublic());
+		tx2.addOutput(3.4, mikeKeypair.getPublic());
 		byte[] sig = signMessage(aliceKeypair.getPrivate(), tx2.getRawDataToSign(0));
 		tx2.addSignature(sig, 0);
 		tx2.finalize();
-		assertTrue(txHandler.isValidTx(tx2));
 
-		// Bob transfer 5.4 to mike, transaction fee is 5-5.4=0.6
+		// Bob transfer 5.5 to mike, transaction fee is 5-5.5=0.5
 		Transaction tx3 = new Transaction();
 		tx3.addInput(tx1.getHash(), 1);
-		tx3.addOutput(5.4, mikeKeypair.getPublic());
+		tx3.addOutput(5.5, mikeKeypair.getPublic());
 		sig = signMessage(bobKeypair.getPrivate(), tx3.getRawDataToSign(0));
 		tx3.addSignature(sig, 0);
 		tx3.finalize();
-		assertTrue(txHandler.isValidTx(tx3));
 
-		acceptedRx = txHandler.handleTxs(new Transaction[] { tx2, tx3 });
-		assertEquals(acceptedRx.length, 2);
-		assertEquals(acceptedRx[0], tx3);
+		Transaction[] acceptedRx = txHandler.handleTxs(new Transaction[] { tx1, tx2, tx3 });
+		assertEquals(acceptedRx.length, 3);
+		assertTrue(Arrays.equals(acceptedRx[0].getHash(), tx2.getHash()));
 	}
 
 	public void testDoubleSpending()
